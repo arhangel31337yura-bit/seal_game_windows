@@ -214,8 +214,10 @@ class SealGame:
             item["y"] += item["speed"]
             item["angle"] += 0.1
 
-            # Столкновение с тюленем
-            if 540 < item["y"] < 620 and abs(item["x"] - self.seal_x) < 85:
+            # Столкновение с тюленем (Честный хитбокс: голова + тело)
+            # Y: от 440 (верх головы) до 630 (низ тела)
+            # X: ширина 75 (чтобы не цеплять хвост и ласты)
+            if 440 < item["y"] < 630 and abs(item["x"] - self.seal_x) < 75:
                 if item["kind"] == "fish":
                     self.score += 1
                     self.spawn_particles("#2eff6b", 8)
