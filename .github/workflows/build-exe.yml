@@ -16,17 +16,42 @@ jobs:
       with:
         python-version: '3.11'
 
+    # 🚀 1. КЭШИРОВАНИЕ PIP
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
     - name: Install PyInstaller
       run: |
         python -m pip install --upgrade pip
         pip install pyinstaller
 
+    # 🛠️ 2. СБОРКА С ЛОГИРОВАНИЕМ
     - name: Build EXE
       run: |
-        pyinstaller --onefile --windowed --name "SealGame" --icon=icon.ico seal_game.py
+        # Проверяем, есть ли иконка. Если нет - собираем без нее.
+        if (Test-Path "icon.ico") {
+            pyinstaller --onefile --windowed --name "SealGame" --icon=icon.ico seal_game.py *> build_log.txt
+        } else {
+            pyinstaller --onefile --windowed --name "SealGame" seal_game.py *> build_log.txt
+        }
 
+    # 📦 3. ЗАГРУЗКА APK (ЕСЛИ УСПЕХ)
     - name: Upload EXE
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: SealGame-Windows
         path: dist/SealGame.exe
+
+    # 🚨 4. ЗАГРУЗКА ЛОГОВ (ЕСЛИ УПАЛО)
+    - name: Upload Build Logs (On Failure)
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: build_log.txt
